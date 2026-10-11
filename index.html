@@ -1,0 +1,169 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>An Everyday Project</title>
+<meta name="description" content="A small design studio. Useful, every day.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Martian+Mono:wdth,wght@75..112.5,100..800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ground: #F5F5F3;
+    --ink: #15171C;
+    --muted: #6B6E76;
+    --body: #33363D;
+    --hl: #B6E85E; /* replaced on load by a random pick from the palette */
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; background: var(--ground); }
+  body {
+    color: var(--ink);
+    font-family: 'Martian Mono', 'SF Mono', Menlo, monospace;
+    font-variation-settings: normal;
+  }
+  .page {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    gap: 48px;
+    padding: clamp(24px, 5vw, 72px);
+  }
+  header {
+    display: flex;
+    justify-content: space-between;
+    gap: 24px;
+    font-size: 12px;
+    font-weight: 400;
+    color: var(--muted);
+  }
+  main {
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 28px;
+    max-width: 1100px;
+  }
+  h1 {
+    margin: 0;
+    min-height: 1.15em;
+    font-size: clamp(30px, 5.6vw, 72px);
+    font-weight: 300;
+    line-height: 1.15;
+    letter-spacing: -0.025em;
+    word-spacing: -0.16em;
+    font-variation-settings: 'wdth' 87.5;
+    font-kerning: normal;
+    text-rendering: optimizeLegibility;
+  }
+  .hl {
+    padding: 0.025em 0.13em 0.025em 0.11em;
+    margin-left: -0.11em;
+    background-image: linear-gradient(var(--hl), var(--hl));
+    background-repeat: no-repeat;
+    background-size: 0% 100%;
+    transition: background-size 1.1s cubic-bezier(.7, 0, .2, 1);
+    -webkit-box-decoration-break: clone;
+    box-decoration-break: clone;
+  }
+  .hl.on { background-size: 100% 100%; }
+  .hl.instant { transition: none; }
+  .caret {
+    display: inline-block;
+    width: 0.07em;
+    height: 0.95em;
+    margin-left: 0.04em;
+    vertical-align: -0.1em;
+    background: var(--ink);
+    animation: blink 1.05s steps(1) infinite;
+  }
+  .caret[hidden] { display: none; }
+  @keyframes blink { 50% { opacity: 0; } }
+  p { margin: 0; max-width: 44ch; font-size: 14px; font-weight: 400; line-height: 1.7; color: var(--body); }
+  a {
+    align-self: flex-start;
+    font-size: 12px;
+    font-weight: 400;
+    margin-top: -10px;
+    padding: 2px 0;
+    color: var(--ink);
+    text-decoration-color: #858880;
+    text-decoration-thickness: 1px;
+    text-underline-offset: 0.35em;
+  }
+  a:hover { text-decoration-thickness: 3px; }
+  a:focus-visible { outline: 2px solid var(--ink); outline-offset: 4px; }
+  @media (prefers-reduced-motion: reduce) {
+    .hl { transition: none; }
+    .caret { animation: none; }
+  }
+</style>
+</head>
+<body>
+<div class="page">
+  <header>
+    <span>aneverydayproject.com</span>
+    <span>© 2026</span>
+  </header>
+  <main>
+    <h1 aria-label="An Everyday Project"><span id="typed" class="hl" aria-hidden="true"></span><span id="caret" class="caret" aria-hidden="true"></span></h1>
+    <p>Useful, every day</p>
+    <a href="mailto:hello@aneverydayproject.com">hello@aneverydayproject.com</a>
+  </main>
+</div>
+<script>
+  // Highlight set: one is picked at random on each load, never the same as the last load.
+  const PALETTE = {
+    Chartreuse: '#B6E85E',
+    Periwinkle: '#BFD0FF',
+    Bubblegum: '#FFB3D1',
+    Marigold: '#FFD25A',
+    Mint: '#9EE8CC',
+    Peach: '#FFB997',
+    Lilac: '#DCC4FF'
+  };
+  const FULL = 'An Everyday Project';
+  const params = new URLSearchParams(location.search);
+  // ?still renders the finished state immediately (used for screenshots).
+  // ?highlight=Name pins one color from the palette.
+  const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const still = params.has('still') || reduce;
+
+  let pick = params.get('highlight');
+  if (!PALETTE[pick]) {
+    let last = null;
+    try { last = localStorage.getItem('aep-last-highlight'); } catch (e) {}
+    const pool = Object.keys(PALETTE).filter((n) => n !== last);
+    pick = pool[Math.floor(Math.random() * pool.length)];
+    try { localStorage.setItem('aep-last-highlight', pick); } catch (e) {}
+  }
+  document.documentElement.style.setProperty('--hl', PALETTE[pick]);
+
+  const typed = document.getElementById('typed');
+  const caret = document.getElementById('caret');
+
+  function settle() {
+    typed.classList.add('on');
+    caret.hidden = true;
+    setTimeout(() => { document.documentElement.dataset.settled = 'true'; }, still ? 0 : 1200);
+  }
+
+  if (still) {
+    typed.classList.add('instant');
+    typed.textContent = FULL;
+    settle();
+  } else {
+    let n = 0;
+    const tick = () => {
+      if (n >= FULL.length) { setTimeout(settle, 900); return; }
+      n += 1;
+      typed.textContent = FULL.slice(0, n);
+      setTimeout(tick, FULL[n] === ' ' ? 260 : 70 + Math.random() * 120);
+    };
+    setTimeout(tick, 800);
+  }
+</script>
+</body>
+</html>
